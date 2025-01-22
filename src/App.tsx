@@ -3,6 +3,7 @@ import axios from 'axios';
 import { Button, TextField, Card, CardContent, Typography, Box, Container } from '@mui/material';
 import { v4 as uuidv4 } from 'uuid';
 import Layout from './components/Layout';
+import DeleteIcon from '@mui/icons-material/Delete';
 
 interface Word {
   id: string;
@@ -51,6 +52,12 @@ const App = () => {
     }
   };
 
+  const handleDelete = (id: string) => {
+    const updatedList = wordList.filter((word) => word.id !== id);
+    setWordList(updatedList);
+    localStorage.setItem('wordList', JSON.stringify(updatedList));
+  };
+
   const handleNavigation = (newValue: number) => {
     setValue(newValue);
   };
@@ -90,7 +97,7 @@ const App = () => {
         </Box>
 
         {wordList.map((word) => (
-          <Card key={word.id} sx={{ marginBottom: 2, borderRadius: '12px' }}>
+          <Card key={word.id} sx={{ marginBottom: 2, borderRadius: '12px', position: 'relative' }}>
             <CardContent>
               <Typography variant="h5" component="div" color="primary">
                 {word.write}
@@ -98,6 +105,24 @@ const App = () => {
               <Typography variant="body1" color="textSecondary">
                 {word.read}
               </Typography>
+              {/* ゴミ箱アイコン */}
+              <Button
+                variant="outlined"
+                color="error"
+                onClick={() => handleDelete(word.id)}
+                sx={{
+                  position: 'absolute',
+                  top: 8,
+                  right: 8,
+                  minWidth: 'auto',
+                  padding: 0,
+                  '& svg': {
+                    fontSize: 28,
+                  },
+                }}
+              >
+                <DeleteIcon />
+              </Button>
             </CardContent>
           </Card>
         ))}
