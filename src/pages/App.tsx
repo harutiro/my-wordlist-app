@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { Button, TextField, Card, CardContent, Typography, Box, Container } from '@mui/material';
 import { v4 as uuidv4 } from 'uuid';
-import Layout from './components/Layout';
+import Layout from '../components/Layout';
 import DeleteIcon from '@mui/icons-material/Delete';
 
 interface Word {

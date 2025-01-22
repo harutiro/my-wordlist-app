@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import { Box, Button, Card, Container, Typography } from '@mui/material';
-import Layout from './components/Layout';
+import Layout from '../components/Layout';
 
 interface Word {
   id: string;
@@ -16,6 +16,7 @@ const QuizPage = () => {
   const [questionNumber, setQuestionNumber] = useState<number>(0);
   const [question, setQuestion] = useState<Word>({} as Word);
   const [value, setValue] = useState(0);
+  const [correctAnswers, setCorrectAnswers] = useState<number>(0); // 正解数を管理
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -52,13 +53,19 @@ const QuizPage = () => {
 
   const handleAnswerClick = (answer: string) => {
     const correct = answer === question.read;
+    if (correct) {
+      setCorrectAnswers((prev) => prev + 1); // 正解したらカウントアップ
+    }
     alert(correct ? '正解!' : '不正解...');
+    
     if (questionNumber < wordList.length - 1) {
       setQuestionNumber(questionNumber + 1);
       setQuestion(wordList[questionNumber + 1]);
     } else {
       alert('クイズ終了!');
-      navigate('/');
+      setTimeout(() => {
+        navigate('/result', { state: { correctAnswers: correctAnswers + (correct ? 1 : 0), totalQuestions: wordList.length } }); // 結果画面に遷移
+      }, 200); // 状態更新が反映されるまで待機
     }
   };
 
