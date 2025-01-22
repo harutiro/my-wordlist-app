@@ -27,7 +27,9 @@ const QuizPage = () => {
   }, []);
 
   useEffect(() => {
-    // question.readが変わった時だけリクエストを発行する
+    // wordListが空のときにエラーメッセージを表示
+    if (wordList.length === 0) return;
+
     if (question.read) {
       axios
         .get(`https://word2vec.harutiro.net/near?get_number=50&str=${question.read}`)
@@ -46,7 +48,7 @@ const QuizPage = () => {
         })
         .catch((error) => console.error(error));
     }
-  }, [question.read]); // question.readが変更されたときだけ発火
+  }, [question.read, wordList]); // wordListが空でないかも確認
 
   const handleAnswerClick = (answer: string) => {
     const correct = answer === question.read;
@@ -59,6 +61,33 @@ const QuizPage = () => {
       navigate('/');
     }
   };
+
+  if (wordList.length === 0) {
+    return (
+      <Layout value={value} onBottomNavChange={(newValue) => setValue(newValue)}>
+        <Container sx={{ marginTop: 3 }}>
+          <Box>
+            <Card sx={{ padding: 3, textAlign: 'center' }}>
+              <Typography variant="h4" gutterBottom>
+                単語リストが空です
+              </Typography>
+              <Typography variant="body1">
+                単語リストに単語を追加してから問題を開始してください。
+              </Typography>
+              <Button
+                variant="contained"
+                color="primary"
+                sx={{ marginTop: 2 }}
+                onClick={() => navigate('/')}
+              >
+                単語を追加
+              </Button>
+            </Card>
+          </Box>
+        </Container>
+      </Layout>
+    );
+  }
 
   if (!question.id) return <div>Loading...</div>;
 
