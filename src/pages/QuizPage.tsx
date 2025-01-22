@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
-import { Box, Button, Card, Container, Typography } from '@mui/material';
+import { Box, Button, Card, Container, Typography, Alert } from '@mui/material';
 import Layout from '../components/Layout';
 
 interface Word {
@@ -17,6 +17,11 @@ const QuizPage = () => {
   const [question, setQuestion] = useState<Word>({} as Word);
   const [value, setValue] = useState(0);
   const [correctAnswers, setCorrectAnswers] = useState<number>(0); // 正解数を管理
+  const [alertMessage, setAlertMessage] = useState<string>(''); // アラートメッセージ
+  const [alertSeverity, setAlertSeverity] = useState<'success' | 'error'>('success'); // アラートの種類
+  const [showAlert, setShowAlert] = useState<boolean>(false); // アラート表示の状態
+  const [showNextButton, setShowNextButton] = useState<boolean>(false); // 次の問題ボタンの表示制御
+  const [quizFinished, setQuizFinished] = useState<boolean>(false); // クイズ終了フラグ
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -51,22 +56,46 @@ const QuizPage = () => {
     }
   }, [question.read, wordList]); // wordListが空でないかも確認
 
+  const playSound = (correct: boolean) => {
+    const sound = new Audio(correct ? '/correct.mp3' : '/incorrect.mp3');
+    sound.play();
+  };
+
   const handleAnswerClick = (answer: string) => {
     const correct = answer === question.read;
     if (correct) {
       setCorrectAnswers((prev) => prev + 1); // 正解したらカウントアップ
     }
-    alert(correct ? '正解!' : '不正解...');
-    
+
+    // 正解・不正解のメッセージとアラートの種類を設定
+    setAlertMessage(correct ? '正解!' : `不正解... 正しい答えは「${question.read}」です`);
+    setAlertSeverity(correct ? 'success' : 'error');
+    setShowAlert(true);
+
+    playSound(correct);  // 正解音または不正解音を再生
+
+    // 「次の問題」ボタンを表示
+    setShowNextButton(true);
+  };
+
+  const handleNextQuestion = () => {
     if (questionNumber < wordList.length - 1) {
       setQuestionNumber(questionNumber + 1);
       setQuestion(wordList[questionNumber + 1]);
+      setShowAlert(false); // アラートを非表示
     } else {
-      alert('クイズ終了!');
-      setTimeout(() => {
-        navigate('/result', { state: { correctAnswers: correctAnswers + (correct ? 1 : 0), totalQuestions: wordList.length } }); // 結果画面に遷移
-      }, 200); // 状態更新が反映されるまで待機
+      // クイズ終了のアラートを表示
+      setAlertMessage('クイズ終了!');
+      setAlertSeverity('success');
+      setQuizFinished(true); // クイズ終了フラグを設定
+      setShowAlert(true);
     }
+    setShowNextButton(false); // 次の問題ボタンを非表示
+  };
+
+  const handleFinishQuiz = () => {
+    // 結果画面に遷移
+    navigate('/result', { state: { correctAnswers, totalQuestions: wordList.length } });
   };
 
   if (wordList.length === 0) {
@@ -107,6 +136,13 @@ const QuizPage = () => {
               {question.write}
             </Typography>
 
+            {/* アラートメッセージを表示 */}
+            {showAlert && (
+              <Alert severity={alertSeverity} sx={{ marginBottom: 2 }}>
+                {alertMessage}
+              </Alert>
+            )}
+
             <Box display="flex" justifyContent="center" flexWrap="wrap" gap={2}>
               {question.answers?.map((answer) => (
                 <Button
@@ -120,6 +156,30 @@ const QuizPage = () => {
                 </Button>
               ))}
             </Box>
+
+            {/* 最終問題の場合 */}
+            {quizFinished ? (
+              <Button
+                variant="contained"
+                color="primary"
+                onClick={handleFinishQuiz}
+                sx={{ marginTop: 2 }}
+              >
+                リザルトへ進む
+              </Button>
+            ) : (
+              // 次の問題へボタン
+              showNextButton && (
+                <Button
+                  variant="contained"
+                  color="primary"
+                  onClick={handleNextQuestion}
+                  sx={{ marginTop: 2 }}
+                >
+                  次の問題へ
+                </Button>
+              )
+            )}
           </Card>
         </Box>
       </Container>
